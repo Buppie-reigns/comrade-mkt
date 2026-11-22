@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="MMUST Market — a campus marketplace for Masinde Muliro University students.">
-  <title>MMUST Market | Campus Marketplace</title>
+  <meta name="description" content="COMRADE MKT — a campus marketplace for students.">
+  <title>COMRADE MKT | Campus Marketplace</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#home" aria-label="MMUST Market home"><span class="brand-mark">M</span><span>MMUST <b>MARKET</b></span></a>
+    <a class="brand" href="#home" aria-label="COMRADE MKT home"><span class="brand-mark">C</span><span>COMRADE <b>MKT</b></span></a>
     <nav class="desktop-nav" aria-label="Main navigation"><a href="#browse">Browse</a><a href="#how-it-works">How it works</a></nav>
     <div class="header-actions"><button class="button button-quiet" id="loginButton">Log in</button><button class="button button-primary" id="sellTopButton">＋ Sell an item</button></div>
   </header>
@@ -17,9 +17,9 @@
   <main id="home">
     <section class="hero">
       <div class="hero-copy">
-        <span class="eyebrow"><span class="live-dot"></span> MADE FOR THE MMUST COMMUNITY</span>
+        <span class="eyebrow"><span class="live-dot"></span> MADE FOR THE CAMPUS COMMUNITY</span>
         <h1>Find it on campus.<br><span>Sell it on campus.</span></h1>
-        <p>Buy and sell books, electronics, furniture, fashion and more with fellow MMUST students.</p>
+        <p>Buy and sell books, electronics, furniture, fashion and more with fellow students.</p>
         <div class="hero-actions"><a class="button button-primary button-large" href="#browse">Explore marketplace <span>→</span></a><button class="button button-outline button-large" id="sellHeroButton">Post an item</button></div>
         <div class="trust-line"><span>✓ Campus-focused</span><span>✓ New & pre-loved</span><span>✓ Buyer protection planned</span></div>
       </div>
@@ -32,7 +32,7 @@
     </section>
 
     <section class="search-section" id="browse">
-      <div class="section-heading"><div><span class="eyebrow">THE CAMPUS MARKETPLACE</span><h2>What are you looking for?</h2></div><span class="listing-count" id="listingCount">6 sample listings</span></div>
+      <div class="section-heading"><div><span class="eyebrow">THE CAMPUS MARKETPLACE</span><h2>What are you looking for?</h2></div><span class="listing-count" id="listingCount">Loading listings…</span></div>
       <div class="search-bar"><span>⌕</span><input id="searchInput" type="search" placeholder="Search for books, phones, furniture..." aria-label="Search listings"><button id="searchButton" class="button button-primary">Search</button></div>
       <div class="filters" id="categoryFilters" aria-label="Filter by category">
         <button class="filter active" data-category="All">All items</button><button class="filter" data-category="Electronics">Electronics</button><button class="filter" data-category="Books">Books</button><button class="filter" data-category="Fashion">Fashion</button><button class="filter" data-category="Furniture">Furniture</button><button class="filter" data-category="Other">Other</button>
@@ -40,18 +40,20 @@
       </div>
       <div class="product-grid" id="productGrid" aria-live="polite"></div>
       <div class="empty-state hidden" id="emptyState"><span>🔎</span><h3>No items found</h3><p>Try another search or category.</p><button class="button button-outline" id="clearFilters">Clear filters</button></div>
-      <p class="demo-note">Preview mode: these are sample products. Real student accounts, listings and payments will be connected in later stages.</p>
+      <p class="demo-note" id="marketStatus">Live marketplace listings. Sign in to publish an item.</p>
     </section>
 
-    <section class="how-section" id="how-it-works"><div class="section-heading"><div><span class="eyebrow">SIMPLE CAMPUS TRADING</span><h2>How MMUST Market works</h2></div></div><div class="steps"><article><span class="step-number">01</span><div class="step-icon">🔍</div><h3>Discover</h3><p>Browse items listed by other students around campus.</p></article><article><span class="step-number">02</span><div class="step-icon">🤝</div><h3>Connect</h3><p>Ask questions and agree on a safe campus handover.</p></article><article><span class="step-number">03</span><div class="step-icon">🛡️</div><h3>Buy with confidence</h3><p>Our planned protected-payment process will help handle payment, delivery confirmation and disputes.</p></article></div></section>
+    <section class="how-section" id="how-it-works"><div class="section-heading"><div><span class="eyebrow">SIMPLE CAMPUS TRADING</span><h2>How COMRADE MKT works</h2></div></div><div class="steps"><article><span class="step-number">01</span><div class="step-icon">🔍</div><h3>Discover</h3><p>Browse items listed by other students around campus.</p></article><article><span class="step-number">02</span><div class="step-icon">🤝</div><h3>Connect</h3><p>Ask questions and agree on a safe campus handover.</p></article><article><span class="step-number">03</span><div class="step-icon">🛡️</div><h3>Buy with confidence</h3><p>Our planned protected-payment process will help handle payment, delivery confirmation and disputes.</p></article></div></section>
 
     <section class="sell-banner"><div><span class="eyebrow">HAVE SOMETHING TO SELL?</span><h2>Your next buyer could be on campus.</h2><p>List your item and connect with the MMUST community.</p></div><button class="button button-light button-large" id="sellBottomButton">Start selling <span>→</span></button></section>
   </main>
 
-  <footer><a class="brand footer-brand" href="#home"><span class="brand-mark">M</span><span>MMUST <b>MARKET</b></span></a><p>A student marketplace concept for Masinde Muliro University.</p><small>© <span id="year"></span> MMUST Market. Built for the campus community.</small></footer>
+  <footer><a class="brand footer-brand" href="#home"><span class="brand-mark">C</span><span>COMRADE <b>MKT</b></span></a><p>Your campus, your marketplace.</p><small>© <span id="year"></span> COMRADE MKT. Built for the campus community.</small></footer>
 
-  <dialog id="sellDialog" class="modal"><form id="listingForm" method="dialog"><div class="modal-head"><div><span class="eyebrow">SELL ON CAMPUS</span><h2>Post a sample listing</h2></div><button type="button" class="close-button" id="closeDialog" aria-label="Close">×</button></div><p class="modal-note">This preview lets you test the listing flow. Your listing will only appear in this browser; accounts and permanent publishing come later.</p><label>Item name<input name="title" required maxlength="60" placeholder="e.g. Scientific calculator"></label><div class="form-row"><label>Price (KES)<input name="price" type="number" min="1" required placeholder="1500"></label><label>Category<select name="category"><option>Electronics</option><option>Books</option><option>Fashion</option><option>Furniture</option><option>Other</option></select></label></div><label>Condition<select name="condition"><option>Second-hand</option><option>New</option></select></label><label>Short description<textarea name="description" rows="3" maxlength="180" placeholder="Describe the item's condition and details"></textarea></label><button class="button button-primary button-full" type="submit">Add preview listing</button></form></dialog>
+  <dialog id="sellDialog" class="modal"><form id="listingForm"><div class="modal-head"><div><span class="eyebrow">SELL ON CAMPUS</span><h2>Post an item</h2></div><button type="button" class="close-button" id="closeDialog" aria-label="Close">×</button></div><p class="modal-note">Your listing will be published to the shared marketplace. Only share a WhatsApp number you are comfortable showing to potential buyers.</p><label>Item name<input name="title" required maxlength="60" placeholder="e.g. Scientific calculator"></label><div class="form-row"><label>Price (KES)<input name="price" type="number" min="1" required placeholder="1500"></label><label>Category<select name="category"><option>Electronics</option><option>Books</option><option>Fashion</option><option>Furniture</option><option>Other</option></select></label></div><label>Condition<select name="condition"><option value="second_hand">Second-hand</option><option value="new">New</option></select></label><label>Short description<textarea name="description" rows="3" maxlength="500" placeholder="Describe the item's condition and details"></textarea></label><label>WhatsApp number<input name="seller_whatsapp" type="tel" required placeholder="e.g. 07XXXXXXXX"></label><button class="button button-primary button-full" type="submit">Publish listing</button></form></dialog>
+  <dialog id="authDialog" class="modal small-modal"><form id="authForm"><div class="modal-head"><div><span class="eyebrow">COMRADE MKT ACCOUNT</span><h2 id="authTitle">Log in</h2></div><button type="button" class="close-button" id="closeAuth" aria-label="Close">×</button></div><p class="modal-note" id="authIntro">Log in to manage your listings.</p><label id="nameField" class="hidden">Display name<input name="display_name" maxlength="60" placeholder="Your name"></label><label>Email address<input name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label><label>Password<input name="password" type="password" required minlength="6" autocomplete="current-password" placeholder="At least 6 characters"></label><p id="authMessage" class="modal-note" role="status"></p><button class="button button-primary button-full" id="authSubmit" type="submit">Log in</button><button class="button button-outline button-full" id="authSwitch" type="button" style="margin-top:9px">Create an account instead</button></form></dialog>
   <dialog id="infoDialog" class="modal small-modal"><div class="modal-head"><h2 id="infoTitle">Coming soon</h2><button class="close-button" id="closeInfo" aria-label="Close">×</button></div><p id="infoText">Student accounts will be available in a later development stage.</p><button class="button button-primary button-full" id="okInfo">Got it</button></dialog>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script.js"></script>
 </body>
 </html>
