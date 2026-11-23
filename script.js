@@ -48,7 +48,9 @@ function renderListings(items) {
     const initials = item.seller_id === currentUser?.id ? 'YOU' : 'CM';
     const phone = item.seller_whatsapp ? normalizePhone(item.seller_whatsapp) : '';
     const contact = phone ? `<a class="contact-link" href="https://wa.me/${escapeHtml(phone)}" target="_blank" rel="noopener">WhatsApp seller ↗</a>` : '<span class="contact-link">Contact unavailable</span>';
-    return `<article class="product-card"><div class="product-visual ${String(item.category).toLowerCase()}"><span>${categoryEmoji[item.category] || '📦'}</span><span class="condition-pill">${itemCondition}</span></div><div class="product-info"><span class="product-category">${escapeHtml(item.category)}</span><h3>${escapeHtml(item.title)}</h3><div class="product-price">${money(item.price)}</div><p class="product-description">${escapeHtml(item.description || 'Message the seller for more details.')}</p><div class="seller-row"><span class="seller-name"><span class="seller-avatar">${initials}</span>${seller}</span>${contact}</div></div></article>`;
+    const photo = Array.isArray(item.image_urls) && item.image_urls.length ? item.image_urls[0] : null;
+    const visual = photo ? '<img class="product-photo" src="' + escapeHtml(photo) + '" alt="' + escapeHtml(item.title) + '" loading="lazy"><span class="condition-pill">' + itemCondition + '</span>' + (item.image_urls.length > 1 ? '<span class="photo-count">＋' + (item.image_urls.length - 1) + '</span>' : '') : '<span>' + (categoryEmoji[item.category] || '📦') + '</span><span class="condition-pill">' + itemCondition + '</span>';
+    return `<article class="product-card"><div class="product-visual ${String(item.category).toLowerCase()}">${visual}</div><div class="product-info"><span class="product-category">${escapeHtml(item.category)}</span><h3>${escapeHtml(item.title)}</h3><div class="product-price">${money(item.price)}</div><p class="product-description">${escapeHtml(item.description || 'Message the seller for more details.')}</p><div class="seller-row"><span class="seller-name"><span class="seller-avatar">${initials}</span>${seller}</span>${contact}</div></div></article>`;
   }).join('');
   document.getElementById('listingCount').textContent = `${shown.length} ${shown.length === 1 ? 'listing' : 'listings'}`;
   document.getElementById('emptyState').classList.toggle('hidden', shown.length !== 0);
@@ -57,7 +59,7 @@ function renderListings(items) {
 let allListings = [];
 async function loadListings() {
   setStatus('Loading live marketplace listings…');
-  const { data, error } = await db.from('products').select('id,seller_id,title,description,price,category,condition,seller_whatsapp,status,created_at').eq('status','active').order('created_at',{ascending:false});
+  const { data, error } = await db.from('products').select('id,seller_id,title,description,price,category,condition,seller_whatsapp,image_urls,status,created_at').eq('status','active').order('created_at',{ascending:false});
   if (error) { setStatus('Could not load listings. Check your Supabase table policies and connection.'); console.error(error); return; }
   allListings = data || [];
   renderListings(allListings);
@@ -125,6 +127,22 @@ function openSellDialog() {
 }
 ['sellTopButton','sellHeroButton','sellBottomButton'].forEach(id => document.getElementById(id).addEventListener('click', openSellDialog));
 document.getElementById('closeDialog').addEventListener('click', () => sellDialog.close());
+const productImagesInput = document.getElementById('productImages');
+productImagesInput.addEventListener('change', () => {
+  const preview = document.getElementById('imagePreview');
+  const files = Array.from(productImagesInput.files || []);
+  preview.innerHTML = '';
+  if (files.length > 5) { alert('Please choose no more than 5 photos.'); productImagesInput.value = ''; return; }
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  if (files.some(file => !allowedTypes.includes(file.type) || file.size > 5 * 1024 * 1024)) { alert('Each photo must be JPG, PNG or WebP and no larger than 5 MB.'); productImagesInput.value = ''; return; }
+  files.forEach(file => {
+    const url = URL.createObjectURL(file);
+    const image = document.createElement('img');
+    image.src = url; image.alt = 'Selected product photo preview';
+    image.onload = () => URL.revokeObjectURL(url);
+    preview.appendChild(image);
+  });
+});
 document.getElementById('listingForm').addEventListener('submit', async event => {
   event.preventDefault();
   if (!currentUser) { sellDialog.close(); openAuth('login'); return; }
@@ -135,15 +153,40 @@ document.getElementById('listingForm').addEventListener('submit', async event =>
   if (!title || !Number.isFinite(price) || price < 1 || !phone) return;
   const submit = event.currentTarget.querySelector('button[type="submit"]');
   submit.disabled = true; submit.textContent = 'Publishing…';
-  const payload = {
-    seller_id: currentUser.id, title, description: String(form.get('description')).trim(), price,
-    category: String(form.get('category')), condition: String(form.get('condition')),
-    seller_whatsapp: phone, status: 'active'
-  };
-  const { error } = await db.from('products').insert(payload);
+  const imageInput = document.getElementById('productImages');
+  const selectedImages = Array.from(imageInput.files || []);
+  if (selectedImages.length > 5) { alert('Please choose no more than 5 photos.'); submit.disabled = false; submit.textContent = 'Publish listing'; return; }
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  const invalidImage = selectedImages.find(file => !allowedTypes.includes(file.type) || file.size > 5 * 1024 * 1024);
+  if (invalidImage) { alert('Each photo must be JPG, PNG or WebP and no larger than 5 MB.'); submit.disabled = false; submit.textContent = 'Publish listing'; return; }
+  const uploadedPaths = [];
+  const imageUrls = [];
+  try {
+    for (const file of selectedImages) {
+      const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]/g, '-');
+      const path = currentUser.id + '/' + crypto.randomUUID() + '-' + safeName;
+      const { error: uploadError } = await db.storage.from('product-images').upload(path, file, { cacheControl: '3600', contentType: file.type, upsert: false });
+      if (uploadError) throw uploadError;
+      uploadedPaths.push(path);
+      const { data: publicData } = db.storage.from('product-images').getPublicUrl(path);
+      imageUrls.push(publicData.publicUrl);
+    }
+    const payload = { seller_id: currentUser.id, title, description: String(form.get('description')).trim(), price, category: String(form.get('category')), condition: String(form.get('condition')), seller_whatsapp: phone, image_urls: imageUrls, status: 'active' };
+    const { error: insertError } = await db.from('products').insert(payload);
+    if (insertError) throw insertError;
+  } catch (error) {
+    if (uploadedPaths.length) {
+      const { error: cleanupError } = await db.storage.from('product-images').remove(uploadedPaths);
+      if (cleanupError) console.error('Could not clean up uploaded photos:', cleanupError);
+    }
+    submit.disabled = false; submit.textContent = 'Publish listing';
+    alert('Could not publish listing: ' + error.message);
+    return;
+  }
   submit.disabled = false; submit.textContent = 'Publish listing';
-  if (error) { alert(`Could not publish listing: ${error.message}`); return; }
-  event.currentTarget.reset(); sellDialog.close();
+  event.currentTarget.reset();
+  document.getElementById('imagePreview').innerHTML = '';
+  sellDialog.close();
   searchInput.value = ''; conditionFilter.value = 'All'; activeCategory = 'All';
   document.querySelectorAll('.filter').forEach(el => el.classList.toggle('active', el.dataset.category === 'All'));
   await loadListings(); document.getElementById('browse').scrollIntoView({behavior:'smooth'});
