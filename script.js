@@ -50,12 +50,85 @@ function renderListings(items) {
     const contact = phone ? `<a class="contact-link" href="https://wa.me/${escapeHtml(phone)}" target="_blank" rel="noopener">WhatsApp seller ↗</a>` : '<span class="contact-link">Contact unavailable</span>';
     const photo = Array.isArray(item.image_urls) && item.image_urls.length ? item.image_urls[0] : null;
     const visual = photo ? '<img class="product-photo" src="' + escapeHtml(photo) + '" alt="' + escapeHtml(item.title) + '" loading="lazy"><span class="condition-pill">' + itemCondition + '</span>' + (item.image_urls.length > 1 ? '<span class="photo-count">＋' + (item.image_urls.length - 1) + '</span>' : '') : '<span>' + (categoryEmoji[item.category] || '📦') + '</span><span class="condition-pill">' + itemCondition + '</span>';
-    return `<article class="product-card"><div class="product-visual ${String(item.category).toLowerCase()}">${visual}</div><div class="product-info"><span class="product-category">${escapeHtml(item.category)}</span><h3>${escapeHtml(item.title)}</h3><div class="product-price">${money(item.price)}</div><p class="product-description">${escapeHtml(item.description || 'Message the seller for more details.')}</p><div class="seller-row"><span class="seller-name"><span class="seller-avatar">${initials}</span>${seller}</span>${contact}</div></div></article>`;
+    return `<article class="product-card" data-product-id="${escapeHtml(item.id)}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(item.title)}"><div class="product-visual ${String(item.category).toLowerCase()}">${visual}</div><div class="product-info"><span class="product-category">${escapeHtml(item.category)}</span><h3>${escapeHtml(item.title)}</h3><div class="product-price">${money(item.price)}</div><p class="product-description">${escapeHtml(item.description || 'Message the seller for more details.')}</p><div class="seller-row"><span class="seller-name"><span class="seller-avatar">${initials}</span>${seller}</span>${contact}</div></div></article>`;
   }).join('');
   document.getElementById('listingCount').textContent = `${shown.length} ${shown.length === 1 ? 'listing' : 'listings'}`;
   document.getElementById('emptyState').classList.toggle('hidden', shown.length !== 0);
   grid.classList.toggle('hidden', shown.length === 0);
 }
+
+const productDialog = document.getElementById('productDialog');
+let activeProduct = null;
+let activePhotoIndex = 0;
+
+function showProductPhoto(index) {
+  if (!activeProduct) return;
+  const photos = Array.isArray(activeProduct.image_urls) ? activeProduct.image_urls : [];
+  if (!photos.length) {
+    document.getElementById('galleryMainImage').classList.add('hidden');
+    document.getElementById('galleryNoPhoto').classList.remove('hidden');
+    document.getElementById('galleryPosition').textContent = '';
+    document.getElementById('galleryThumbnails').innerHTML = '';
+    document.getElementById('galleryPrev').classList.add('hidden');
+    document.getElementById('galleryNext').classList.add('hidden');
+    return;
+  }
+  activePhotoIndex = (index + photos.length) % photos.length;
+  const mainImage = document.getElementById('galleryMainImage');
+  mainImage.src = photos[activePhotoIndex];
+  mainImage.alt = activeProduct.title + ' photo ' + (activePhotoIndex + 1);
+  mainImage.classList.remove('hidden');
+  document.getElementById('galleryNoPhoto').classList.add('hidden');
+  document.getElementById('galleryPosition').textContent = (activePhotoIndex + 1) + ' / ' + photos.length;
+  document.getElementById('galleryPrev').classList.toggle('hidden', photos.length < 2);
+  document.getElementById('galleryNext').classList.toggle('hidden', photos.length < 2);
+  document.getElementById('galleryThumbnails').innerHTML = photos.map((url, i) =>
+    '<button type="button" class="gallery-thumb ' + (i === activePhotoIndex ? 'active' : '') + '" data-photo-index="' + i + '" aria-label="View photo ' + (i + 1) + '">' +
+    '<img src="' + escapeHtml(url) + '" alt="" loading="lazy"></button>'
+  ).join('');
+}
+
+function openProductDetails(productId) {
+  activeProduct = allListings.find(item => String(item.id) === String(productId));
+  if (!activeProduct) return;
+  const photos = Array.isArray(activeProduct.image_urls) ? activeProduct.image_urls : [];
+  const phone = activeProduct.seller_whatsapp ? normalizePhone(activeProduct.seller_whatsapp) : '';
+  document.getElementById('detailCategory').textContent = activeProduct.category || 'Other';
+  document.getElementById('detailTitle').textContent = activeProduct.title || 'Untitled item';
+  document.getElementById('detailPrice').textContent = money(activeProduct.price);
+  document.getElementById('detailCondition').textContent = activeProduct.condition === 'second_hand' ? 'Second-hand' : 'New';
+  document.getElementById('detailDescription').textContent = activeProduct.description || 'No description provided.';
+  document.getElementById('detailSeller').textContent = activeProduct.seller_id === currentUser?.id ? 'You' : 'Student seller';
+  const contact = document.getElementById('detailWhatsApp');
+  contact.classList.toggle('hidden', !phone);
+  if (phone) contact.href = 'https://wa.me/' + phone;
+  showProductPhoto(0);
+  if (!productDialog.open) productDialog.showModal();
+}
+
+grid.addEventListener('click', event => {
+  if (event.target.closest('a, button')) return;
+  const card = event.target.closest('.product-card');
+  if (card) openProductDetails(card.dataset.productId);
+});
+grid.addEventListener('keydown', event => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const card = event.target.closest('.product-card');
+  if (!card) return;
+  event.preventDefault();
+  openProductDetails(card.dataset.productId);
+});
+document.getElementById('closeProductDialog').addEventListener('click', () => productDialog.close());
+document.getElementById('galleryPrev').addEventListener('click', () => showProductPhoto(activePhotoIndex - 1));
+document.getElementById('galleryNext').addEventListener('click', () => showProductPhoto(activePhotoIndex + 1));
+document.getElementById('galleryThumbnails').addEventListener('click', event => {
+  const thumb = event.target.closest('[data-photo-index]');
+  if (thumb) showProductPhoto(Number(thumb.dataset.photoIndex));
+});
+productDialog.addEventListener('click', event => {
+  if (event.target === productDialog) productDialog.close();
+});
+
 let allListings = [];
 async function loadListings() {
   setStatus('Loading live marketplace listings…');
